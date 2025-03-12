@@ -36,7 +36,7 @@ class WorkerController extends AbstractController
         }
     }
 
-    #[Route('/worker-time/register', name: 'registerWorker')]
+    #[Route('/worker-time/register', name: 'registerWorker', methods: ['POST'])]
     public function registerWorkerTime(Request $request): JsonResponse
     {
         $data = [
