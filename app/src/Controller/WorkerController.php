@@ -30,9 +30,9 @@ class WorkerController extends AbstractController
         $id = $this->workerService->add($data);
 
         if (!is_null($id)) {
-            return new JsonResponse(['user' => $id]);
+            return new JsonResponse(['id' => $id]);
         } else {
-            return new JsonResponse(['user' => null, 'error' => $error]);
+            return new JsonResponse(['id' => null, 'error' => $error]);
         }
     }
 }
