@@ -30,9 +30,24 @@ class WorkerController extends AbstractController
         $id = $this->workerService->add($data);
 
         if (!is_null($id)) {
-            return new JsonResponse(['id' => $id]);
+            return new JsonResponse(['response' => ['id' => $id]]);
         } else {
-            return new JsonResponse(['id' => null, 'error' => $error]);
+            return new JsonResponse(['response' => ['id' => null, 'error' => $error]]);
         }
+    }
+
+    #[Route('/worker-time/register', name: 'registerWorker', methods: ['POST'])]
+    public function registerWorker(Request $request): JsonResponse
+    {
+        $data = [
+            'worker_id' => $request->get('worker_id', ''),
+            'start' => $request->get('start', ''),
+            'end' => $request->get('end', ''),
+            'id' => uniqid('user',true)
+        ];
+
+        $message = $this->workerService->registerTime($data);
+
+        return new JsonResponse(['response' => ['response' => $message]]);
     }
 }
