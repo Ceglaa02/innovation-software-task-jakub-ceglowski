@@ -6,3 +6,7 @@ Instalacja:
 2. Po zbudowaniu kontenera php-fpm proszę wykonać w nim komende: php composer.phar install
 3. Po zainstalowaniu zależności composera proszę wpisać: php bin/console app:create-db
 4. Można usunąć kontener composer ponieważ miał on pobrać tylko jego zależności
+
+Endpointy:
+
+1. Dodawanie użytkownika: url = https://localhost/worker/add, metoda = POST, parametry = name, surname
