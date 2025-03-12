@@ -1,0 +1,15 @@
+{
+    local_certs
+}
+
+http://localhost {
+    redir https://localhost{uri} 301
+}
+
+https://localhost {
+    root * /var/www/app/public
+    encode gzip
+    php_fastcgi php-fpm:9000
+    file_server
+    tls internal
+}
