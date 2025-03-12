@@ -11,3 +11,5 @@ Endpointy:
 
 1. Dodawanie użytkownika: url = https://localhost/worker/add, metoda = POST, parametry = name, surname
 2. Rejestrowanie czasu użytkownika: url = https://localhost/worker-time/register, metoda = POST, parametry = worker_id, start, end
+3. Podsumowanie czasu użytkownika: url = https://localhost/worker-time/summary, metoda = POST, parametry = worker_id, day
+
