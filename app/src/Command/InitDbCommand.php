@@ -48,7 +48,7 @@ class InitDbCommand extends Command
 
             $schema = new Schema();
 
-            $worker = $schema->createTable('Worker');
+            $worker = $schema->createTable('Workers');
             $worker->addColumn('id', 'string', ['length' => 36]);
             $worker->addColumn('name', 'string', ['length' => 50]);
             $worker->addColumn('surname', 'string', ['length' => 50]);
