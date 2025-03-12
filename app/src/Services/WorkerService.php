@@ -7,6 +7,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception;
 use Symfony\Component\Dotenv\Dotenv;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Log\Logger;
 
 class WorkerService
@@ -126,7 +127,7 @@ class WorkerService
         }
     }
 
-    public function summaryTime(string $workerId, string $date): string
+    public function summary(string $workerId, string $date): array
     {
 
         function isFullDate(string $date): bool
@@ -139,6 +140,8 @@ class WorkerService
             return false;
         }
 
+        $filesystem = new Filesystem();
+
         try {
             $query = $this->connection->createQueryBuilder();
             $query
@@ -148,16 +151,48 @@ class WorkerService
                 ->groupBy('worker_id')
                 ->setParameter(0, $workerId);
 
-            $searchDateFormat = isFullDate($date) ? "DATE_FORMAT(day, '%Y-%m-%d') = ?" : "DATE_FORMAT(day, '%Y-%m') = ?";
+            $fullDate = isFullDate($date);
+            $searchDateFormat = $fullDate  ? "DATE_FORMAT(day, '%Y-%m-%d') = ?" : "DATE_FORMAT(day, '%Y-%m') = ?";
 
             $query
                 ->andWhere($searchDateFormat)
                 ->setParameter(1, $date);
 
-            return (string)$query->executeQuery()->fetchOne();
+            $hours = (int)$query->executeQuery()->fetchOne();
+            $system = parse_ini_file('/var/www/app/config/system.ini');
+
+            $result = ["stawka" => $system['rate_per_hour_pln'] . " PLN"];
+
+            if ($fullDate) {
+                return array_merge($result, [
+                    "suma po przeliczeniu" => ($system['rate_per_hour_pln'] * $hours) . " PLN",
+                    "ilość godzin z danego dnia" => $hours,
+                ]);
+            }
+
+            $additionalHours = $hours > 40 ? $hours - 40 : 0;
+            $normalHours = $hours > 40 ? 40 : $hours;
+
+            $additionalRatePerHour = $system['rate_per_hour_pln'] * ($system['additional_per_hour_percent_rate'] / 100);
+
+            $sum = $normalHours * $system['additional_per_hour_percent_rate'];
+
+            if ($additionalHours > 0) {
+                $sum += $additionalRatePerHour * $additionalHours;
+            }
+
+            return array_merge($result,  [
+                "ilość normalnych godzin z danego miesiąca" => $normalHours,
+                "ilość nadgodzin z danego miesiąca" => $additionalHours,
+                "stawka nadgodzinowa" => $additionalRatePerHour . " PLN",
+                "suma po przeliczeniu" => $sum . " PLN"
+            ]);
+
+
+
         } catch (Exception $e) {
             (new Logger)->error($e->getMessage());
-            return '0';
+            return ['error' => $e->getMessage()];
         }
     }
 }

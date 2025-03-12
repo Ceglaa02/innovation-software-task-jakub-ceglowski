@@ -56,7 +56,7 @@ class WorkerController extends AbstractController
         $workerId = $request->get('worker_id', '');
         $day = $request->get('day', '');
 
-        $message = $this->workerService->summaryTime($workerId, $day);
+        $message = $this->workerService->summary($workerId, $day);
 
         return new JsonResponse(['response' => ['response' => $message]]);
     }
