@@ -43,14 +43,17 @@ class WorkerService
             $endTime = new DateTime($end);
             $interval = $startTime->diff($endTime);
 
-            return $interval->h > 12 || ($interval->h == 12 && $interval->i > 0);
-        }
-        catch (\Exception) {
+            $hours = $interval->h;
+            $minutes = $interval->i;
+
+            return !($hours > 12 || ($hours === 12 && $minutes > 0));
+        } catch (\Exception) {
             return false;
         }
     }
 
-    private function dateIsAvailableForUser(string $workerId, string $start): bool {
+    private function dateIsAvailableForUser(string $workerId, string $start): bool
+    {
 
         try {
             $dayStart = new DateTime($start);
@@ -61,15 +64,14 @@ class WorkerService
                 ->select('*')
                 ->from('WorkTime')
                 ->where('worker_id = ?')
-                ->andWhere('DATE(start) = ?')
+                ->andWhere('day = ?')
                 ->setParameter(0, $workerId)
                 ->setParameter(1, $dayStart);
 
             $result = $query->executeQuery()->rowCount();
 
             return $result === 0;
-        }
-        catch (\Exception) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -95,21 +97,23 @@ class WorkerService
     public function registerTime(array $data = []): string
     {
 
-        $failureMessage = 'Czas pracy nie został dodany.';
-        $successMessage = 'Czas pracy został dodany!';
+        $failureMessage = 'Czas pracy nie zostal dodany.';
+        $successMessage = 'Czas pracy zostal dodany!';
 
         if (empty($data) || !$this->validateDateInterval($data['start'], $data['end'])
-            || !$this->dateIsAvailableForUser($data['worker_id'] , $data['start'])) {
+            || !$this->dateIsAvailableForUser($data['worker_id'], $data['start'])) {
             return $failureMessage;
         }
 
-        unset($data['worker_id']);
-
         try {
             $start = new DateTime($data['start']);
+            $end = new DateTime($data['end']);
+
             $dayStart = $start->format('Y-m-d');
 
             $data['day'] = $dayStart;
+            $data['start'] = $start->format('Y-m-d H:i');
+            $data['end'] = $end->format('Y-m-d H:i');
 
             $this->connection->beginTransaction();
             $this->connection->insert('WorkTime', $data);
@@ -118,7 +122,42 @@ class WorkerService
             return $successMessage;
         } catch (Exception $e) {
             (new Logger)->error($e->getMessage());
-            return $failureMessage;
+            return $e->getMessage();
+        }
+    }
+
+    public function summaryTime(string $workerId, string $date): string
+    {
+
+        function isFullDate(string $date): bool
+        {
+            $d = DateTime::createFromFormat('Y-m-d', $date);
+            if ($d && $d->format('Y-m-d') === $date) {
+                return true;
+            }
+
+            return false;
+        }
+
+        try {
+            $query = $this->connection->createQueryBuilder();
+            $query
+                ->select('SUM(ROUND(TIMESTAMPDIFF(MINUTE, start, end) / 30) * 30 / 60) AS total_work_hours')
+                ->from('WorkTime')
+                ->where('worker_id = ?')
+                ->groupBy('worker_id')
+                ->setParameter(0, $workerId);
+
+            $searchDateFormat = isFullDate($date) ? "DATE_FORMAT(day, '%Y-%m-%d') = ?" : "DATE_FORMAT(day, '%Y-%m') = ?";
+
+            $query
+                ->andWhere($searchDateFormat)
+                ->setParameter(1, $date);
+
+            return (string)$query->executeQuery()->fetchOne();
+        } catch (Exception $e) {
+            (new Logger)->error($e->getMessage());
+            return '0';
         }
     }
 }

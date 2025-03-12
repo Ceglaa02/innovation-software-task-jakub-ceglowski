@@ -24,7 +24,7 @@ class WorkerController extends AbstractController
         $data = [
             'name' => $request->get('name', ''),
             'surname' => $request->get('surname', ''),
-            'id' => uniqid('user',true)
+            'id' => uniqid('user', true)
         ];
 
         $id = $this->workerService->add($data);
@@ -36,17 +36,27 @@ class WorkerController extends AbstractController
         }
     }
 
-    #[Route('/worker-time/register', name: 'registerWorker', methods: ['POST'])]
-    public function registerWorker(Request $request): JsonResponse
+    #[Route('/worker-time/register', name: 'registerWorker')]
+    public function registerWorkerTime(Request $request): JsonResponse
     {
         $data = [
             'worker_id' => $request->get('worker_id', ''),
             'start' => $request->get('start', ''),
-            'end' => $request->get('end', ''),
-            'id' => uniqid('user',true)
+            'end' => $request->get('end', '')
         ];
 
         $message = $this->workerService->registerTime($data);
+
+        return new JsonResponse(['response' => ['message' => $message]]);
+    }
+
+    #[Route('/worker-time/summary', name: 'summaryWorker', methods: ['POST'])]
+    public function summaryWorkerTime(Request $request): JsonResponse
+    {
+        $workerId = $request->get('worker_id', '');
+        $day = $request->get('day', '');
+
+        $message = $this->workerService->summaryTime($workerId, $day);
 
         return new JsonResponse(['response' => ['response' => $message]]);
     }

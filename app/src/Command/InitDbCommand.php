@@ -61,7 +61,7 @@ class InitDbCommand extends Command
             $workTime->addColumn('end', 'datetime');
             $workTime->addColumn('day', 'date');
             $workTime->setPrimaryKey(['id']);
-            $workTime->addForeignKeyConstraint('Worker', ['worker_id'], ['id'], ['onDelete' => 'CASCADE']);
+            $workTime->addForeignKeyConstraint('Workers', ['worker_id'], ['id'], ['onDelete' => 'CASCADE']);
 
             $platform = $this->connection->getDatabasePlatform();
             $queries = $schema->toSql($platform);
