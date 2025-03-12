@@ -29,8 +29,6 @@ services:
       XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003"
     volumes:
       - ./app:/var/www/app
-    depends_on:
-      - composer
     networks:
       - network
 
@@ -38,25 +36,19 @@ services:
     image: mysql:8
     container_name: mysql
     restart: unless-stopped
+    env_file:
+      - ./app/.env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: symfony
-      MYSQL_USER: symfony
-      MYSQL_PASSWORD: symfony
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB_NAME}
+      MYSQL_USER: ${MYSQL_DB_USER}
+      MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
       - network
-
-  composer:
-    image: composer:latest
-    container_name: composer
-    volumes:
-      - ./app:/app
-    working_dir: /app
-    command: install
 
 networks:
   network:
