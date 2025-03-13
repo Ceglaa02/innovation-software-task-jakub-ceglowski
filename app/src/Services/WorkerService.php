@@ -170,8 +170,8 @@ class WorkerService
                 ]);
             }
 
-            $additionalHours = $hours > 40 ? $hours - 40 : 0;
-            $normalHours = $hours > 40 ? 40 : $hours;
+            $additionalHours = $hours > $system['monthly_norm_of_hours'] ? $hours - $system['monthly_norm_of_hours'] : 0;
+            $normalHours = $hours > $system['monthly_norm_of_hours'] ? $system['monthly_norm_of_hours'] : $hours;
 
             $additionalRatePerHour = $system['rate_per_hour_pln'] * ($system['additional_per_hour_percent_rate'] / 100);
 
